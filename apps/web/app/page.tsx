@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDeploymentUrl } from "@/config/deployment.config";
+import { getHubCardHref } from "@/config/deployment.config";
 import { games } from "@/config/games.config";
 
 export default function HomePage() {
@@ -12,9 +12,7 @@ export default function HomePage() {
 
       <section aria-label="게임 목록" className="grid">
         {games.map((game) => {
-          const deploymentUrl = getDeploymentUrl(game);
-          const isPlayable = game.status === "live" && Boolean(deploymentUrl);
-          const href = isPlayable ? deploymentUrl! : `/${game.slug}`;
+          const href = getHubCardHref(game);
 
           return (
             <Link key={game.slug} href={href} className="card">
