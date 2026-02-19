@@ -11,7 +11,7 @@
   - `apps/web`: 허브 사이트(게임 목록, 라우팅 진입점)
   - `apps/<slug>`: 게임별 독립 플레이스홀더 앱 3종
   - `packages/ui`, `packages/game-core`, `packages/config`: 공유 레이어의 최소 스캐폴드만 선구축
-  - 허브는 환경변수로 배포 URL이 제공된 slug만 rewrite하고, 미설정 slug는 허브 내부 안내 페이지로 처리
+  - 허브는 `live` + 배포 URL 환경변수가 설정된 게임만 외부 URL로 직접 이동시키고, 미설정 slug는 허브 내부 안내 페이지로 처리
 - 설계 원칙:
   - 첫 PR은 "동작 가능한 최소 구조"에 집중하고 고급 기능은 후속 이슈로 분리
   - 신규 게임 추가 경로를 재사용 가능하게 만드는 구조 우선
@@ -27,7 +27,7 @@
   - 문서: `.agent/project/games-registry.md`, `docs/games/*.md`(정합성 확인), `.agent/specs/*`
 - 통합 지점:
   - 허브 게임 메타데이터(`apps/web/config/games.config.ts`)
-  - 허브 rewrite 설정(`apps/web/next.config.mjs`)
+  - 허브 배포 URL 해석 로직(`apps/web/config/deployment.config.ts`)
   - 허브 slug 안내 라우트(`apps/web/app/[slug]/page.tsx`)
   - 환경변수 예시 파일(`.env.example`)과 앱별 링크 fallback 규칙
   - Turborepo 태스크 그래프(`turbo.json`)와 workspace 범위(`pnpm-workspace.yaml`)
@@ -52,7 +52,7 @@
 - 리스크:
   - Turborepo 태스크 정의 누락으로 전체 빌드 실패
   - 앱 간 설정 불일치(Next.js/TypeScript 버전, 스크립트 명칭)로 개발 경험 저하
-  - 배포 URL 환경변수 누락/오입력으로 게임 연결 실패
+  - 배포 URL 환경변수 누락/오입력으로 live 게임 이동 경로 실패
 - 대응 전략:
   - 초기 스캐폴드에서 스크립트/설정을 공통 패턴으로 통일
   - 루트 `dev:all` 스크립트로 허브/게임 앱 동시 실행 경로를 표준화
@@ -68,7 +68,7 @@
 - 테스트 전략:
   - 정적 검증: `pnpm install`, `pnpm turbo build`
   - 기능 검증(로컬/프리뷰): `pnpm dev:all` 실행 후 허브 목록 렌더링, 3개 슬러그 접근 시 안내 페이지 표시, "허브로 돌아가기" 링크 동작 확인
-  - 라우팅 검증: 배포 URL 환경변수가 없는 slug는 허브 내부 안내 페이지로 처리되는지 확인
+  - 라우팅 검증: 배포 URL 환경변수가 없는 slug는 허브 내부 안내 페이지로 처리되는지, live+URL 설정 게임은 외부 URL로 이동되는지 확인
   - 운영 검증(프로덕션): 허브 홈 + 3개 슬러그 접속 결과를 이슈 코멘트로 기록
 - 성능 기준:
   - 플레이스홀더 단계에서 허브/게임 첫 화면 진입 시 명백한 빈 화면 지연(수 초 단위)이 없어야 함
@@ -95,3 +95,4 @@
 - 상태: APPROVED
 - 승인자: Chanhee Park
 - 승인 시각: 2026-02-19
+- 재승인 시각(요구사항 조정 반영): 2026-02-19

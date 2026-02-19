@@ -7,6 +7,7 @@
 | 파일 | 내용 | 상태 |
 |---|---|---|
 | `platform.md` | 플랫폼 요구사항 (허브 사이트, 아키텍처, 비기능) | Draft |
+| `vercel-operations.md` | Vercel 멀티 프로젝트 운영/배포 가이드 | Draft |
 | `games/patisserie-drop.md` | Patisserie Drop 게임 요구사항 | Draft |
 | `games/sadari.md` | 사다리 게임 요구사항 | Draft |
 | `games/santa-endless-runner.md` | Santa Endless Runner 게임 요구사항 | Draft |

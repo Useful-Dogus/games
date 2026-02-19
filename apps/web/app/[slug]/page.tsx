@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getDeploymentUrl } from "@/config/deployment.config";
 import { games } from "@/config/games.config";
 
 export default async function GameLandingPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -8,6 +9,11 @@ export default async function GameLandingPage({ params }: { params: Promise<{ sl
 
   if (!game) {
     notFound();
+  }
+
+  const deploymentUrl = getDeploymentUrl(game);
+  if (game.status === "live" && deploymentUrl) {
+    redirect(deploymentUrl);
   }
 
   const isComingSoon = game.status === "coming-soon";

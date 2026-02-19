@@ -26,11 +26,11 @@
 - Completion criterion: `apps/patisserie-drop`, `apps/sadari`, `apps/santa-endless-runner`가 각자 플레이스홀더 페이지를 제공한다.
 - Verification method: 각 앱 `dev` 실행 및 경로 렌더링 확인
 
-5. [ ] 허브 게임 메타데이터 및 rewrite 규칙 반영
+5. [ ] 허브 게임 메타데이터 및 게임 이동 규칙 반영
 - Purpose: 허브 목록과 슬러그 라우팅 연결 규칙을 구현 상태로 고정
 - Estimated time: 25 min
-- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, `next.config.mjs`에 배포 URL 환경변수가 설정된 slug만 rewrite 대상으로 구성된다.
-- Verification method: 환경변수 유무에 따라 rewrite 결과가 달라지는지 설정 파일/실행 결과로 확인
+- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, 허브가 `live` + 배포 URL 설정 게임만 외부 URL로 이동하도록 구성된다.
+- Verification method: 환경변수/상태 조합에 따라 외부 이동 또는 안내 페이지가 표시되는지 실행 결과로 확인
 
 6. [ ] 로컬 실행/URL 구성 정리 (`dev:all`, 환경변수 오버라이드)
 - Purpose: 로컬 검증 동선을 단순화하고 URL 하드코딩 문제를 제거
@@ -73,7 +73,7 @@
 
 - Potential bottlenecks:
   - Next.js 다중 앱 초기화 시 설정 불일치로 빌드 오류 발생 가능
-  - rewrite 대상 URL과 실제 배포 URL 불일치 가능
+  - 허브에 설정된 게임 URL과 실제 배포 URL 불일치 가능
   - 초기 workspace 설정 실수로 패키지 인식 누락 가능
 - Workaround / mitigation:
   - 공통 스크립트/버전 규칙을 한 번에 정렬
@@ -92,3 +92,4 @@
 - Status: APPROVED
 - Approver: Chanhee Park
 - Approved at: 2026-02-19
+- Re-approved at (scope adjustment): 2026-02-19

@@ -28,12 +28,14 @@ Confirm the following with the user before writing any code:
 
 3. **Register in hub config**
    - Add entry to `apps/web/config/games.config.ts` with all `GameMeta` fields.
+   - Include `deploymentEnvKey` for the game's deployment URL variable.
 
-4. **Add rewrite rule**
-   - In `apps/web/next.config.js`, add:
-     ```js
-     { source: '/<slug>/:path*', destination: 'https://<slug>.vercel.app/:path*' }
-     ```
+4. **Configure deployment URL variable**
+   - Add the game's deployment env key to `.env.example`.
+   - Keep the value empty until the game is actually deployed.
+   - Hub behavior:
+     - `status: coming-soon` or empty env URL -> in-hub 안내 페이지
+     - `status: live` + env URL set -> hub card moves directly to the external game URL
 
 5. **Verify Turborepo / pnpm workspace**
    - Confirm `pnpm-workspace.yaml` includes `apps/*` (or add `apps/<slug>` explicitly if needed).
@@ -46,11 +48,12 @@ Confirm the following with the user before writing any code:
 7. **Vercel deployment** _(requires user action)_
    - Create a new Vercel project linked to `apps/<slug>`.
    - Set the deployment URL to `https://<slug>.vercel.app`.
-   - Note the URL and confirm the rewrite destination in step 4 matches.
+   - Set the corresponding env var in `apps/web` project and switch status to `live` when ready.
 
 ## Completion Criteria
 
 - [ ] Game appears in the hub site game list (`apps/web/config/games.config.ts`).
-- [ ] Placeholder page is accessible at the correct slug path.
+- [ ] `coming-soon` game slug shows in-hub 안내 페이지 at `/<slug>`.
+- [ ] `live` + deployment URL configured game card moves to the external game URL.
 - [ ] `games-registry.md` and `docs/games/<slug>.md` are created/updated.
 - [ ] `pnpm turbo build` passes without errors.

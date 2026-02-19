@@ -27,9 +27,13 @@ pnpm dev:games
 
 ## 배포 정책 (허브 라우팅)
 
-- 허브는 **환경변수가 설정된 게임만** 외부 배포 URL로 rewrite한다.
-- 환경변수가 없는 게임 slug는 허브 내부 안내 페이지(Coming Soon)로 응답한다.
+- 허브는 게임 카드를 통해 **배포 URL이 설정된 `live` 게임만** 외부 게임 URL로 직접 이동시킨다.
+- 배포 URL이 없거나 `coming-soon` 상태인 게임 slug는 허브 내부 안내 페이지(Coming Soon)로 응답한다.
 - 따라서 스캐폴드 게임은 별도 배포 없이도 404 대신 안내 페이지를 제공할 수 있다.
+
+## Vercel 운영
+
+- 운영 가이드는 `docs/vercel-operations.md`를 참고한다.
 
 ## 구조
 

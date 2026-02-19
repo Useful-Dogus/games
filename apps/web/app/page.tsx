@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getDeploymentUrl } from "@/config/deployment.config";
 import { games } from "@/config/games.config";
 
 export default function HomePage() {
@@ -10,20 +11,26 @@ export default function HomePage() {
       </header>
 
       <section aria-label="게임 목록" className="grid">
-        {games.map((game) => (
-          <Link key={game.slug} href={`/${game.slug}`} className="card">
-            <h2>{game.title}</h2>
-            <p>{game.description}</p>
-            <div className="tags">
-              {game.genre.map((genre) => (
-                <span key={genre} className="tag">
-                  {genre}
-                </span>
-              ))}
-            </div>
-            {game.status === "coming-soon" ? <span className="status">Coming Soon</span> : null}
-          </Link>
-        ))}
+        {games.map((game) => {
+          const deploymentUrl = getDeploymentUrl(game);
+          const isPlayable = game.status === "live" && Boolean(deploymentUrl);
+          const href = isPlayable ? deploymentUrl! : `/${game.slug}`;
+
+          return (
+            <Link key={game.slug} href={href} className="card">
+              <h2>{game.title}</h2>
+              <p>{game.description}</p>
+              <div className="tags">
+                {game.genre.map((genre) => (
+                  <span key={genre} className="tag">
+                    {genre}
+                  </span>
+                ))}
+              </div>
+              {game.status === "coming-soon" ? <span className="status">Coming Soon</span> : null}
+            </Link>
+          );
+        })}
       </section>
     </main>
   );
