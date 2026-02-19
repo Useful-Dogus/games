@@ -1,0 +1,494 @@
+import * as Phaser from "phaser";
+
+import {
+  CONTAINER_BOTTOM,
+  CONTAINER_HEIGHT,
+  CONTAINER_LEFT,
+  CONTAINER_RIGHT,
+  CONTAINER_TOP,
+  CONTAINER_WIDTH,
+  DROP_SPAWN_Y,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  OVERFLOW_GAMEOVER_ACTIVATE_MS,
+  OVERFLOW_LINE_Y,
+  MERGE_IMPULSE_X_MAX,
+  MERGE_IMPULSE_X_MIN,
+  MERGE_IMPULSE_Y,
+  PHYSICS_DENSITY_FACTOR,
+  PHYSICS_FRICTION,
+  PHYSICS_FRICTION_AIR,
+  PHYSICS_FRICTION_STATIC,
+  PHYSICS_GRAVITY_Y,
+  PHYSICS_RESTITUTION
+} from "../config";
+import { getLevelDefinition, MAX_LEVEL } from "../core/model/levels";
+import { pickNextDropLevel } from "../core/rules/drop-table";
+import { getMergeScore } from "../core/rules/score";
+import { RuntimeEvents } from "./events";
+import type { HudState } from "./types";
+
+interface BallEntity {
+  id: number;
+  level: number;
+  radius: number;
+  body: MatterJS.BodyType;
+  display: Phaser.GameObjects.Arc;
+  label: Phaser.GameObjects.Text;
+}
+
+const LEVEL_COLORS = [
+  0x9ea4ad, 0xd4c7b7, 0xf1c676, 0xc09068, 0xa86f42, 0x946039, 0xd7b0a7, 0xefc17a, 0xf5e2ac, 0xe9cf8d,
+  0xd4a937
+];
+
+export class PatisserieDropScene extends Phaser.Scene {
+  private eventsBridge: RuntimeEvents;
+
+  private score = 0;
+  private overflowBreachMs = 0;
+  private nextDropLevels: [number, number] = [1, 1];
+  private currentDropX = GAME_WIDTH / 2;
+  private isGameOver = false;
+  private canDrop = true;
+  private pendingLandingBallId: number | null = null;
+  private isDragging = false;
+
+  private ballIdCounter = 0;
+  private balls = new Map<number, BallEntity>();
+  private bodyToBall = new Map<number, number>();
+  private mergeQueue: Array<[number, number]> = [];
+
+  private previewCircle?: Phaser.GameObjects.Arc;
+  private previewLevelLabel?: Phaser.GameObjects.Text;
+  private previewGuide?: Phaser.GameObjects.Graphics;
+
+  constructor(eventsBridge: RuntimeEvents) {
+    super("patisserie-drop-scene");
+    this.eventsBridge = eventsBridge;
+  }
+
+  create(): void {
+    this.matter.world.setGravity(0, PHYSICS_GRAVITY_Y);
+    this.setupBackground();
+    this.setupContainerBodies();
+    this.setupInput();
+    this.setupCollisionHandler();
+
+    this.startRound();
+  }
+
+  update(_time: number, delta: number): void {
+    this.syncDisplayObjects();
+    this.processMergeQueue();
+
+    if (this.isGameOver) {
+      return;
+    }
+
+    const hasOverflow = this.hasOverflowObject();
+
+    if (hasOverflow) {
+      this.overflowBreachMs = Phaser.Math.Clamp(this.overflowBreachMs + delta, 0, OVERFLOW_GAMEOVER_ACTIVATE_MS);
+    } else {
+      this.overflowBreachMs = 0;
+    }
+
+    if (this.overflowBreachMs >= OVERFLOW_GAMEOVER_ACTIVATE_MS) {
+      this.isGameOver = true;
+      this.eventsBridge.emit("game:over", { finalScore: this.score });
+    }
+
+    this.publishHudState();
+  }
+
+  restartRound(): void {
+    this.clearRoundObjects();
+    this.startRound();
+  }
+
+  private setupBackground(): void {
+    const graphics = this.add.graphics();
+    graphics.lineStyle(3, 0x8b5e3c, 1);
+    graphics.strokeRect(CONTAINER_LEFT, CONTAINER_TOP, CONTAINER_WIDTH, CONTAINER_HEIGHT);
+
+    this.add.rectangle(GAME_WIDTH / 2, OVERFLOW_LINE_Y, CONTAINER_WIDTH - 8, 2, 0xc75a4a, 0.9).setDepth(9);
+
+  }
+
+  private setupContainerBodies(): void {
+    this.matter.add.rectangle(CONTAINER_LEFT - 14, CONTAINER_TOP + CONTAINER_HEIGHT / 2, 28, CONTAINER_HEIGHT + 120, {
+      isStatic: true
+    });
+
+    this.matter.add.rectangle(
+      CONTAINER_RIGHT + 14,
+      CONTAINER_TOP + CONTAINER_HEIGHT / 2,
+      28,
+      CONTAINER_HEIGHT + 120,
+      {
+        isStatic: true
+      }
+    );
+
+    this.matter.add.rectangle(GAME_WIDTH / 2, CONTAINER_BOTTOM + 18, CONTAINER_WIDTH + 56, 36, {
+      isStatic: true
+    });
+  }
+
+  private setupInput(): void {
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (this.isGameOver || !this.canDrop) {
+        return;
+      }
+
+      this.isDragging = true;
+
+      const previewRadius = this.getPreviewRadius(this.nextDropLevels[0]);
+      this.currentDropX = Phaser.Math.Clamp(pointer.x, CONTAINER_LEFT + previewRadius, CONTAINER_RIGHT - previewRadius);
+      this.updatePreviewPosition();
+      this.updatePreviewVisuals();
+    });
+
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (this.isGameOver || !this.isDragging || !this.canDrop) {
+        return;
+      }
+
+      const previewRadius = this.getPreviewRadius(this.nextDropLevels[0]);
+      this.currentDropX = Phaser.Math.Clamp(pointer.x, CONTAINER_LEFT + previewRadius, CONTAINER_RIGHT - previewRadius);
+      this.updatePreviewPosition();
+      this.updatePreviewVisuals();
+    });
+
+    const finalizeDrag = () => {
+      if (!this.isDragging) {
+        return;
+      }
+
+      this.isDragging = false;
+
+      if (this.isGameOver || !this.canDrop) {
+        return;
+      }
+
+      this.dropCurrentPreview();
+    };
+
+    this.input.on("pointerup", () => {
+      finalizeDrag();
+    });
+
+    this.input.on("pointerupoutside", () => {
+      finalizeDrag();
+    });
+
+    this.input.on("gameout", () => {
+      if (!this.isDragging) {
+        return;
+      }
+
+      this.isDragging = false;
+    });
+  }
+
+  private setupCollisionHandler(): void {
+    this.matter.world.on(
+      "collisionstart",
+      (event: { pairs: Array<{ bodyA: MatterJS.BodyType; bodyB: MatterJS.BodyType }> }) => {
+        if (this.isGameOver) {
+          return;
+        }
+
+        event.pairs.forEach((pair) => {
+          const firstId = this.bodyToBall.get(pair.bodyA.id);
+          const secondId = this.bodyToBall.get(pair.bodyB.id);
+
+          if (
+            this.pendingLandingBallId !== null &&
+            (firstId === this.pendingLandingBallId || secondId === this.pendingLandingBallId)
+          ) {
+            this.canDrop = true;
+            this.pendingLandingBallId = null;
+            this.updatePreviewVisuals();
+          }
+
+          if (firstId === undefined || secondId === undefined || firstId === secondId) {
+            return;
+          }
+
+          const first = this.balls.get(firstId);
+          const second = this.balls.get(secondId);
+
+          if (!first || !second || first.level !== second.level) {
+            return;
+          }
+
+          const sortedA = Math.min(firstId, secondId);
+          const sortedB = Math.max(firstId, secondId);
+          const alreadyQueued = this.mergeQueue.some(([a, b]) => a === sortedA && b === sortedB);
+
+          if (!alreadyQueued) {
+            this.mergeQueue.push([sortedA, sortedB]);
+          }
+        });
+      }
+    );
+  }
+
+  private startRound(): void {
+    this.score = 0;
+    this.overflowBreachMs = 0;
+    this.isGameOver = false;
+    this.canDrop = true;
+    this.pendingLandingBallId = null;
+    this.isDragging = false;
+    this.currentDropX = GAME_WIDTH / 2;
+
+    this.nextDropLevels = [pickNextDropLevel(this.score), pickNextDropLevel(this.score)];
+    this.ensurePreviewObjects();
+    this.updatePreviewVisuals();
+    this.publishHudState();
+  }
+
+  private clearRoundObjects(): void {
+    this.balls.forEach((ball) => {
+      this.matter.world.remove(ball.body);
+      ball.display.destroy();
+      ball.label.destroy();
+    });
+
+    this.balls.clear();
+    this.bodyToBall.clear();
+    this.mergeQueue = [];
+  }
+
+  private ensurePreviewObjects(): void {
+    if (!this.previewCircle) {
+      this.previewCircle = this.add.circle(this.currentDropX, 94, 22, 0xdddddd, 1).setDepth(8);
+    }
+
+    if (!this.previewLevelLabel) {
+      this.previewLevelLabel = this.add
+        .text(this.currentDropX, 94, `${this.nextDropLevels[0]}`, {
+          color: "#3f2b1e",
+          fontSize: "26px",
+          fontStyle: "700"
+        })
+        .setOrigin(0.5)
+        .setDepth(9);
+    }
+
+    if (!this.previewGuide) {
+      this.previewGuide = this.add.graphics().setDepth(5);
+    }
+  }
+
+  private updatePreviewPosition(): void {
+    if (!this.previewCircle || !this.previewLevelLabel) {
+      return;
+    }
+
+    this.previewCircle.setX(this.currentDropX);
+    this.previewLevelLabel.setX(this.currentDropX);
+  }
+
+  private updatePreviewVisuals(): void {
+    if (!this.previewCircle || !this.previewLevelLabel || !this.previewGuide) {
+      return;
+    }
+
+    if (!this.canDrop || this.isGameOver) {
+      this.previewCircle.setVisible(false);
+      this.previewLevelLabel.setVisible(false);
+      this.previewGuide.clear();
+      return;
+    }
+
+    const previewLevel = this.nextDropLevels[0];
+    const previewRadius = this.getPreviewRadius(previewLevel);
+    const color = LEVEL_COLORS[previewLevel - 1] ?? 0xffffff;
+    const previewY = CONTAINER_TOP - previewRadius - 4;
+    const fontSize = Phaser.Math.Clamp(previewRadius * 0.75, 14, 42);
+
+    this.previewCircle.setVisible(true);
+    this.previewLevelLabel.setVisible(true);
+    this.previewCircle.setRadius(previewRadius);
+    this.previewCircle.setFillStyle(color, 1);
+    this.previewCircle.setStrokeStyle(2, 0xffffff, 0.6);
+    this.previewCircle.setPosition(this.currentDropX, previewY);
+
+    this.previewLevelLabel.setPosition(this.currentDropX, previewY);
+    this.previewLevelLabel.setText(`${previewLevel}`);
+    this.previewLevelLabel.setStyle({
+      color: "#3f2b1e",
+      fontSize: `${fontSize}px`,
+      fontStyle: "700"
+    });
+
+    this.previewGuide.clear();
+    this.previewGuide.lineStyle(1, 0x8b5e3c, this.isDragging ? 0.5 : 0.22);
+    this.previewGuide.beginPath();
+    this.previewGuide.moveTo(this.currentDropX, previewY + previewRadius + 3);
+    this.previewGuide.lineTo(this.currentDropX, CONTAINER_BOTTOM - 3);
+    this.previewGuide.strokePath();
+  }
+
+  private getPreviewRadius(level: number): number {
+    const { radius } = getLevelDefinition(level);
+    return radius;
+  }
+
+  private dropCurrentPreview(): void {
+    if (!this.canDrop) {
+      return;
+    }
+
+    const level = this.nextDropLevels[0];
+
+    const dropped = this.addBall(level, this.currentDropX, DROP_SPAWN_Y);
+    this.pendingLandingBallId = dropped.id;
+    this.canDrop = false;
+
+    this.eventsBridge.emit("game:drop", { level, x: this.currentDropX });
+
+    this.nextDropLevels = [this.nextDropLevels[1], pickNextDropLevel(this.score)];
+    this.updatePreviewVisuals();
+    this.publishHudState();
+  }
+
+  private addBall(level: number, x: number, y: number): BallEntity {
+    const { radius } = getLevelDefinition(level);
+    const id = ++this.ballIdCounter;
+
+    const body = this.matter.add.circle(x, y, radius, {
+      friction: PHYSICS_FRICTION,
+      frictionAir: PHYSICS_FRICTION_AIR,
+      frictionStatic: PHYSICS_FRICTION_STATIC,
+      restitution: PHYSICS_RESTITUTION,
+      density: level * PHYSICS_DENSITY_FACTOR
+    });
+
+    const display = this.add.circle(x, y, radius, LEVEL_COLORS[level - 1] ?? 0xffffff, 1).setDepth(6);
+    display.setStrokeStyle(2, 0xffffff, 0.4);
+    const label = this.add
+      .text(x, y, `${level}`, {
+        color: "#3f2b1e",
+        fontSize: `${Phaser.Math.Clamp(radius * 0.78, 12, 46)}px`,
+        fontStyle: "700"
+      })
+      .setOrigin(0.5)
+      .setDepth(7);
+
+    const entity: BallEntity = {
+      id,
+      level,
+      radius,
+      body,
+      display,
+      label
+    };
+
+    this.balls.set(id, entity);
+    this.bodyToBall.set(body.id, id);
+
+    return entity;
+  }
+
+  private syncDisplayObjects(): void {
+    this.balls.forEach((entity) => {
+      entity.display.setPosition(entity.body.position.x, entity.body.position.y);
+      entity.display.setRotation(entity.body.angle);
+      entity.label.setPosition(entity.body.position.x, entity.body.position.y);
+      entity.label.setRotation(0);
+    });
+  }
+
+  private processMergeQueue(): void {
+    while (this.mergeQueue.length > 0) {
+      const [firstId, secondId] = this.mergeQueue.shift() as [number, number];
+      const first = this.balls.get(firstId);
+      const second = this.balls.get(secondId);
+
+      if (!first || !second || first.level !== second.level) {
+        continue;
+      }
+
+      const level = first.level;
+      const totalMass = first.body.mass + second.body.mass;
+      const centerX =
+        (first.body.position.x * first.body.mass + second.body.position.x * second.body.mass) /
+        (totalMass || 1);
+      const centerY =
+        (first.body.position.y * first.body.mass + second.body.position.y * second.body.mass) /
+        (totalMass || 1);
+
+      this.removeBall(first);
+
+      let targetLevel = level + 1;
+      let mergedEntity: BallEntity;
+
+      if (level >= MAX_LEVEL) {
+        targetLevel = MAX_LEVEL;
+        mergedEntity = second;
+        this.matter.body.setPosition(mergedEntity.body, { x: centerX, y: centerY });
+      } else {
+        this.removeBall(second);
+        mergedEntity = this.addBall(targetLevel, centerX, centerY);
+      }
+
+      this.matter.body.setVelocity(mergedEntity.body, {
+        x: Phaser.Math.FloatBetween(MERGE_IMPULSE_X_MIN, MERGE_IMPULSE_X_MAX),
+        y: MERGE_IMPULSE_Y
+      });
+
+      const mergeScore = getMergeScore(targetLevel, this.isTopAreaClear());
+
+      this.score += mergeScore.totalScore;
+
+      this.eventsBridge.emit("game:merge", {
+        fromLevel: level,
+        toLevel: targetLevel,
+        scoreDelta: mergeScore.totalScore
+      });
+
+      this.updatePreviewVisuals();
+      this.publishHudState();
+    }
+  }
+
+  private isTopAreaClear(): boolean {
+    const topThreshold = CONTAINER_TOP + CONTAINER_HEIGHT * 0.2;
+
+    return Array.from(this.balls.values()).every((ball) => ball.body.position.y - ball.radius >= topThreshold);
+  }
+
+  private hasOverflowObject(): boolean {
+    return Array.from(this.balls.values()).some((ball) => {
+      // Ignore the currently dropping object until it lands.
+      if (this.pendingLandingBallId !== null && ball.id === this.pendingLandingBallId) {
+        return false;
+      }
+
+      return ball.body.position.y - ball.radius < OVERFLOW_LINE_Y;
+    });
+  }
+
+  private removeBall(ball: BallEntity): void {
+    this.matter.world.remove(ball.body);
+    this.bodyToBall.delete(ball.body.id);
+    this.balls.delete(ball.id);
+    ball.display.destroy();
+    ball.label.destroy();
+  }
+
+  private publishHudState(): void {
+    const hudState: HudState = {
+      score: this.score,
+      nextDropLevels: [...this.nextDropLevels] as [number, number],
+      isGameOver: this.isGameOver
+    };
+
+    this.eventsBridge.emit("hud:update", hudState);
+  }
+}
