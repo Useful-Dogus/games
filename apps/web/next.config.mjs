@@ -13,12 +13,18 @@ const gameRouteTargets = [
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
   async rewrites() {
-    return gameRouteTargets
+    const mappedRoutes = gameRouteTargets
       .filter((route) => Boolean(route.target))
       .map((route) => ({
         source: `/${route.slug}/:path*`,
         destination: `${route.target}/:path*`
       }));
+
+    return {
+      beforeFiles: mappedRoutes,
+      afterFiles: [],
+      fallback: []
+    };
   }
 };
 
