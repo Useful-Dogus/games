@@ -6,6 +6,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:all": "pnpm --parallel --filter @dogus/web --filter @dogus/patisserie-drop --filter @dogus/sadari --filter @dogus/santa-endless-runner dev",
     "dev:web": "pnpm --filter @dogus/web dev",
     "dev:games": "pnpm --parallel --filter @dogus/patisserie-drop --filter @dogus/sadari --filter @dogus/santa-endless-runner dev"
   },

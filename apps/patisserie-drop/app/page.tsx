@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-const hubUrl = process.env.NEXT_PUBLIC_HUB_URL ?? "https://dogusgames.com";
+const hubUrl =
+  process.env.NEXT_PUBLIC_HUB_URL ??
+  (process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://dogusgames.com");
 
 export default function PlaceholderPage() {
   return (

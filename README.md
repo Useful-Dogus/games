@@ -6,8 +6,24 @@
 
 ```bash
 pnpm install
-pnpm turbo dev
+pnpm dev:all
 ```
+
+개별 실행이 필요하면:
+
+```bash
+pnpm dev:web
+pnpm dev:games
+```
+
+## 로컬 URL 설정
+
+- 기본 로컬 포트:
+  - 허브: `http://127.0.0.1:3000`
+  - `patisserie-drop`: `http://127.0.0.1:3001`
+  - `sadari`: `http://127.0.0.1:3002`
+  - `santa-endless-runner`: `http://127.0.0.1:3003`
+- 환경변수로 URL을 바꾸려면 루트 `.env.example`을 참고해 설정한다.
 
 ## 구조
 
