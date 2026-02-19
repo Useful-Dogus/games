@@ -34,6 +34,13 @@ Steps:
 2. Run `git diff` to understand intent.
 3. Write the message focused on the purpose of the change.
 
+Checkpoint policy:
+
+- Prefer multiple checkpoint commits over one bulk commit.
+- Each commit should represent one independently reviewable/verifiable unit.
+- Default mapping: one task (or one tightly related task pair) per commit.
+- Before each commit, run the smallest relevant verification command and include results in the PR summary.
+
 Output rule: present every commit message suggestion inside a Markdown fenced code block for copy-paste.
 
 ---
@@ -54,7 +61,7 @@ Procedure:
 1. Confirm `main` is up to date.
 2. Create / switch to the feature branch.
 3. Implement and verify.
-4. Commit on the feature branch using checkpoint commits for recovery points.
+4. Commit on the feature branch using task-aligned checkpoint commits for recovery points.
 5. Merge to `main` via PR.
 
 ### Exception: Hotfix

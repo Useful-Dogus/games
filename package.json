@@ -1,0 +1,17 @@
+{
+  "name": "dogus-games",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:all": "pnpm --parallel --filter @dogus/web --filter @dogus/patisserie-drop --filter @dogus/sadari --filter @dogus/santa-endless-runner dev",
+    "dev:web": "pnpm --filter @dogus/web dev",
+    "dev:games": "pnpm --parallel --filter @dogus/patisserie-drop --filter @dogus/sadari --filter @dogus/santa-endless-runner dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.2"
+  }
+}

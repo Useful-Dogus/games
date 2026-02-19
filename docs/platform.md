@@ -89,7 +89,7 @@ Dogus Games는 웹 브라우저에서 바로 플레이할 수 있는 캐주얼 �
 | ------- | -------- | ------------------------------------------------------------------------------------------------ |
 | WEB-001 | Must | 게임 카드 목록을 그리드 형태로 렌더링한다. |
 | WEB-002 | Must | 각 게임 카드는 썸네일 이미지, 게임 제목, 한 줄 설명, 장르 태그를 표시한다. |
-| WEB-003 | Must | 게임 카드 클릭 시 해당 게임의 서브패스(예: `/patisserie-drop`)로 이동한다. |
+| WEB-003 | Must | 게임 카드 클릭 시 `live` + 배포 URL 설정 게임은 외부 게임 URL로 이동하고, 그 외에는 해당 서브패스 안내 페이지(예: `/patisserie-drop`)를 표시한다. |
 | WEB-004 | Must | 게임 메타데이터(제목, 설명, slug, 썸네일 경로)는 중앙 config 파일(`games.config.ts`)로 관리한다. |
 | WEB-005 | Should | 신규 게임 추가 시 config 파일만 수정하면 목록에 자동 반영된다. |
 | WEB-006 | Should | 게임이 없거나 준비 중인 경우 `Coming Soon` 배지를 카드에 표시한다. |
@@ -193,16 +193,10 @@ games/                        # 모노레포 루트
 
 ### 5.3 배포 전략
 
-허브 사이트(`apps/web`)에서 Next.js `rewrites`를 활용해 게임 앱을 서브패스처럼 프록시한다.
-
-```js
-// apps/web/next.config.js
-async rewrites() {
-  return [
-    { source: '/<slug>/:path*', destination: 'https://<slug>.vercel.app/:path*' },
-  ];
-}
-```
+- 각 게임 앱은 독립된 Vercel 프로젝트로 배포한다.
+- 허브(`apps/web`)는 게임 카탈로그/진입점 역할을 담당한다.
+- 게임 상태가 `live`이고 배포 URL 환경변수가 설정된 경우 허브 카드에서 외부 게임 URL로 직접 이동한다.
+- 배포 URL이 없는 slug는 허브 내부 안내 페이지(Coming Soon)로 처리한다.
 
 ### 5.4 게임 메타데이터 구조
 
@@ -215,6 +209,7 @@ export interface GameMeta {
   genre: string[];
   thumbnail: string;
   status: 'live' | 'coming-soon';
+  deploymentEnvKey?: string; // 허브가 참조할 배포 URL 환경변수 키
 }
 ```
 
