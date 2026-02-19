@@ -97,6 +97,8 @@ Every phase output (Intake Note, Spec, Plan, Tasks, or Implementation report) mu
 - **Assumptions**: list all assumptions, or write "none".
 - **Open questions**: unresolved items that need a decision.
 - **Approval status**: `DRAFT` / `APPROVED` / `BLOCKED`.
+- **Approval metadata**: approver display name + approval date when status is `APPROVED` or `BLOCKED`.
+  - Never use generic placeholders (`User`, `Reviewer`) if a concrete approver name is known.
 
 ---
 
@@ -107,6 +109,8 @@ Every phase output (Intake Note, Spec, Plan, Tasks, or Implementation report) mu
 - Store screenshots and reference artifacts in `.agent/references/`.
 - Branch-based (PR) integration is the default. See `skills/git-workflow.md` for branch and commit rules.
 - Keep root `README.md` / `AGENTS.md` minimal; record details in `.agent` documents.
+- During implementation, create task-aligned checkpoint commits instead of one large end-of-work commit.
+  - One commit should map to one independently verifiable unit (typically one task or one tightly related task pair).
 
 ### Exception: Emergency Bug
 
