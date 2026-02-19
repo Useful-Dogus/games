@@ -18,6 +18,7 @@ Vercel에서 동일 Git 저장소로 프로젝트를 분리 생성한다.
 
 - 허브 카드 클릭 시:
   - 게임 `status`가 `live`이고 해당 배포 URL env가 설정되어 있으면 외부 URL로 이동
+  - 개발 환경(`NODE_ENV=development`)에서는 `*_LOCAL_URL` env가 있으면 로컬 URL로 우선 이동
   - 그 외에는 허브 내부 안내 페이지(Coming Soon) 표시
 - 즉, 스캐폴드 게임은 배포하지 않아도 허브에서 안전하게 안내 가능
 
@@ -29,10 +30,17 @@ Vercel에서 동일 Git 저장소로 프로젝트를 분리 생성한다.
 - `SADARI_URL`
 - `SANTA_ENDLESS_RUNNER_URL`
 
+로컬 개발용(선택):
+
+- `PATISSERIE_DROP_LOCAL_URL`
+- `SADARI_LOCAL_URL`
+- `SANTA_ENDLESS_RUNNER_LOCAL_URL`
+
 규칙:
 
 - 실제 배포된 `live` 게임만 설정한다.
 - 미배포 게임은 비워둔다.
+- 로컬 개발 URL은 `apps/web` 로컬 실행 시에만 사용된다.
 - 환경변수 변경 후 `apps/web`를 재배포한다.
 
 ## 4) 게임 앱 환경변수
