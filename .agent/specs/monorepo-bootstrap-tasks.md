@@ -29,22 +29,28 @@
 5. [ ] 허브 게임 메타데이터 및 rewrite 규칙 반영
 - Purpose: 허브 목록과 슬러그 라우팅 연결 규칙을 구현 상태로 고정
 - Estimated time: 25 min
-- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, `next.config.js`에 3개 슬러그 rewrite 규칙이 존재한다.
+- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, `next.config.mjs`에 3개 슬러그 rewrite 규칙이 존재한다.
 - Verification method: 설정 파일 검토 + 허브에서 슬러그 이동 시 의도한 경로로 연결 확인
 
-6. [ ] 모노레포 전체 빌드/실행 검증
+6. [ ] 로컬 실행/URL 구성 정리 (`dev:all`, 환경변수 오버라이드)
+- Purpose: 로컬 검증 동선을 단순화하고 URL 하드코딩 문제를 제거
+- Estimated time: 15 min
+- Completion criterion: 루트에서 `pnpm dev:all`로 허브+3개 게임 앱이 동시에 실행되고, `.env.example`에 URL 오버라이드 예시가 존재한다.
+- Verification method: `pnpm dev:all` 실행 로그 확인 + 허브/게임 링크 라우팅 수동 확인
+
+7. [ ] 모노레포 전체 빌드/실행 검증
 - Purpose: task graph 및 workspace 구성이 실제로 동작함을 검증
 - Estimated time: 20 min
 - Completion criterion: `pnpm install`, `pnpm turbo build`가 모두 성공한다.
 - Verification method: 명령 실행 로그 기록
 
-7. [ ] 문서 정합성 업데이트 및 구현 보고 정리
+8. [ ] 문서 정합성 업데이트 및 구현 보고 정리
 - Purpose: 코드/문서 상태 동기화 및 추적 가능성 확보
 - Estimated time: 20 min
 - Completion criterion: 필요 시 `.agent/project/games-registry.md`, `docs/games/*.md`, PR 템플릿 항목(검증/리스크)이 최신 상태로 반영된다.
 - Verification method: 변경 파일 diff 검토 및 스펙/플랜-구현 추적 링크 확인
 
-8. [ ] PR 준비 및 병합 후 운영 스모크 테스트 기록
+9. [ ] PR 준비 및 병합 후 운영 스모크 테스트 기록
 - Purpose: 첫 이슈 종료 조건(운영 검증 기록) 충족
 - Estimated time: 15 min
 - Completion criterion: PR 생성 후 병합되고, 운영 URL(허브+3개 슬러그) 접속 확인 결과가 이슈 코멘트에 기록된다.
@@ -53,14 +59,15 @@
 ## Dependencies
 
 - Prerequisite tasks:
-  - 1 → 2, 3, 4, 6 선행
+  - 1 → 2, 3, 4, 7 선행
   - 3, 4 완료 후 5 진행
   - 2, 5 완료 후 6 진행
-  - 6 완료 후 7 진행
+  - 2, 5, 6 완료 후 7 진행
   - 7 완료 후 8 진행
+  - 8 완료 후 9 진행
 - Tasks that can run in parallel:
   - 2, 3, 4는 1 완료 후 병렬 가능
-  - 7의 문서 정합성 점검 일부는 6 직전부터 선행 가능 (최종 반영은 6 이후)
+  - 8의 문서 정합성 점검 일부는 7 직전부터 선행 가능 (최종 반영은 7 이후)
 
 ## Risk Notes
 
@@ -83,5 +90,5 @@
 ## Approval Status
 
 - Status: APPROVED
-- Approver: User
+- Approver: Chanhee Park
 - Approved at: 2026-02-19
