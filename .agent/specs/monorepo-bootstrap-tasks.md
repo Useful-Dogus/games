@@ -29,13 +29,13 @@
 5. [ ] 허브 게임 메타데이터 및 rewrite 규칙 반영
 - Purpose: 허브 목록과 슬러그 라우팅 연결 규칙을 구현 상태로 고정
 - Estimated time: 25 min
-- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, `next.config.mjs`에 3개 슬러그 rewrite 규칙이 존재한다.
-- Verification method: 설정 파일 검토 + 허브에서 슬러그 이동 시 의도한 경로로 연결 확인
+- Completion criterion: `games.config.ts`에 3개 게임 메타데이터가 정의되고, `next.config.mjs`에 배포 URL 환경변수가 설정된 slug만 rewrite 대상으로 구성된다.
+- Verification method: 환경변수 유무에 따라 rewrite 결과가 달라지는지 설정 파일/실행 결과로 확인
 
 6. [ ] 로컬 실행/URL 구성 정리 (`dev:all`, 환경변수 오버라이드)
 - Purpose: 로컬 검증 동선을 단순화하고 URL 하드코딩 문제를 제거
 - Estimated time: 15 min
-- Completion criterion: 루트에서 `pnpm dev:all`로 허브+3개 게임 앱이 동시에 실행되고, `.env.example`에 URL 오버라이드 예시가 존재한다.
+- Completion criterion: 루트에서 `pnpm dev:all`로 허브+3개 게임 앱이 동시에 실행되고, `.env.example`에 URL 오버라이드 예시가 존재하며, 배포 미연결 slug는 허브 안내 페이지로 표시된다.
 - Verification method: `pnpm dev:all` 실행 로그 확인 + 허브/게임 링크 라우팅 수동 확인
 
 7. [ ] 모노레포 전체 빌드/실행 검증

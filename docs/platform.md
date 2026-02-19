@@ -194,15 +194,19 @@ games/                        # 모노레포 루트
 ### 5.3 배포 전략
 
 허브 사이트(`apps/web`)에서 Next.js `rewrites`를 활용해 게임 앱을 서브패스처럼 프록시한다.
+단, 배포 URL 환경변수가 설정된 게임만 rewrite 대상으로 포함한다.
 
 ```js
-// apps/web/next.config.js
+// apps/web/next.config.mjs
 async rewrites() {
-  return [
-    { source: '/<slug>/:path*', destination: 'https://<slug>.vercel.app/:path*' },
-  ];
+  // include only routes whose target URL is provided via env
+  return routes
+    .filter((route) => route.target)
+    .map((route) => ({ source: `/${route.slug}/:path*`, destination: `${route.target}/:path*` }));
 }
 ```
+
+배포 URL이 없는 slug는 허브 내부 안내 페이지(Coming Soon)로 처리한다.
 
 ### 5.4 게임 메타데이터 구조
 

@@ -76,3 +76,29 @@ p {
   border-radius: 999px;
   padding: 4px 8px;
 }
+
+.notice-card {
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.notice-card p + p {
+  margin-top: 12px;
+}
+
+.notice-actions {
+  margin-top: 14px;
+}
+
+.notice-actions a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.notice-actions a:hover {
+  text-decoration: underline;
+}

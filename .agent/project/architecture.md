@@ -37,20 +37,24 @@ games/                              # 모노레포 루트
 ## 배포 전략
 
 - 각 게임 앱은 독립된 Vercel 프로젝트로 배포.
-- `apps/web`의 `next.config.js` rewrites로 서브패스 프록시:
+- `apps/web`의 `next.config.mjs` rewrites로 서브패스 프록시(배포 URL 환경변수가 설정된 게임만):
 
 ```js
-// apps/web/next.config.js
+// apps/web/next.config.mjs
 async rewrites() {
-  return [
-    { source: '/patisserie-drop/:path*', destination: 'https://patisserie-drop.vercel.app/:path*' },
-    { source: '/sadari/:path*',          destination: 'https://sadari.vercel.app/:path*' },
-    { source: '/santa-endless-runner/:path*', destination: 'https://santa-endless-runner.vercel.app/:path*' },
+  const routes = [
+    { slug: 'patisserie-drop', target: process.env.PATISSERIE_DROP_URL },
+    { slug: 'sadari', target: process.env.SADARI_URL },
+    { slug: 'santa-endless-runner', target: process.env.SANTA_ENDLESS_RUNNER_URL },
   ];
+  return routes
+    .filter((route) => route.target)
+    .map((route) => ({ source: `/${route.slug}/:path*`, destination: `${route.target}/:path*` }));
 }
 ```
 
 - 사용자에게는 `dogusgames.com` 하위로 노출되지만, 실제로는 각 앱이 독립 배포·운영.
+- 배포 URL이 아직 없는 게임 slug는 허브 내부 안내 페이지(Coming Soon)로 처리합니다.
 
 ## 게임 메타데이터 구조
 
