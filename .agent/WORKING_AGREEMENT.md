@@ -72,13 +72,6 @@ Root `README.md` and `AGENTS.md` contain entry points only — detailed policies
 | Root entry points (`CLAUDE.md`, `AGENTS.md`) | English | First file any agent reads |
 | Code, variable names, inline comments | English | TypeScript project standard |
 
-## 7. Approval Attribution Policy
-
-- Approval records must include the approver's explicit display name (for example, `Chanhee Park`).
-- Do not use placeholder approver values such as `User`, `Reviewer`, or `N/A` when the user identity is known.
-- If the preferred approval name is unclear, ask once before recording approval metadata.
-- After the name is confirmed, reuse the same approver name across Spec / Plan / Tasks artifacts for that workstream.
-
 ---
 
 ## Further Reading
