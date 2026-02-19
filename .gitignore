@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+out/
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Agent references (screenshots, HTML exports — binary / large artifacts)
+.agent/references/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
