@@ -13,7 +13,7 @@ export const CONTAINER_BOTTOM = CONTAINER_TOP + CONTAINER_HEIGHT;
 export const OVERFLOW_LINE_Y = CONTAINER_TOP + 18;
 export const DROP_SPAWN_Y = CONTAINER_TOP - 20;
 
-export const OVERFLOW_GAMEOVER_ACTIVATE_MS = 500;
+export const OVERFLOW_GAMEOVER_ACTIVATE_MS = 1000;
 // Balls moving upward faster than this threshold (px/frame, negative = up) are
 // excluded from overflow detection — they are bouncing after a merge, not stacking.
 export const OVERFLOW_VELOCITY_IGNORE_THRESHOLD = -0.5;
