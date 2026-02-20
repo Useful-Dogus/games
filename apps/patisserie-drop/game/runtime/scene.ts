@@ -36,6 +36,7 @@ interface BallEntity {
   radius: number;
   body: MatterJS.BodyType;
   display: Phaser.GameObjects.Image;
+  hitCircle: Phaser.GameObjects.Arc;
 }
 
 function spriteKey(level: number): string {
@@ -259,6 +260,7 @@ export class PatisserieDropScene extends Phaser.Scene {
   private clearRoundObjects(): void {
     this.balls.forEach((ball) => {
       this.matter.world.remove(ball.body);
+      ball.hitCircle.destroy();
       ball.display.destroy();
     });
 
@@ -345,7 +347,7 @@ export class PatisserieDropScene extends Phaser.Scene {
   }
 
   private addBall(level: number, x: number, y: number): BallEntity {
-    const { radius } = getLevelDefinition(level);
+    const { radius, hitColor } = getLevelDefinition(level);
     const id = ++this.ballIdCounter;
 
     const body = this.matter.add.circle(x, y, radius, {
@@ -355,6 +357,12 @@ export class PatisserieDropScene extends Phaser.Scene {
       restitution: PHYSICS_RESTITUTION,
       density: level * PHYSICS_DENSITY_FACTOR
     });
+
+    const hitCircle = this.add
+      .arc(x, y, radius)
+      .setFillStyle(hitColor, 0.18)
+      .setStrokeStyle(1.5, hitColor, 0.45)
+      .setDepth(4);
 
     const displaySize = radius * 2 * SPRITE_DISPLAY_SCALE;
     const display = this.add
@@ -367,6 +375,7 @@ export class PatisserieDropScene extends Phaser.Scene {
       level,
       radius,
       body,
+      hitCircle,
       display
     };
 
@@ -378,7 +387,9 @@ export class PatisserieDropScene extends Phaser.Scene {
 
   private syncDisplayObjects(): void {
     this.balls.forEach((entity) => {
-      entity.display.setPosition(entity.body.position.x, entity.body.position.y);
+      const { x, y } = entity.body.position;
+      entity.hitCircle.setPosition(x, y);
+      entity.display.setPosition(x, y);
       entity.display.setRotation(entity.body.angle);
     });
   }
@@ -464,6 +475,7 @@ export class PatisserieDropScene extends Phaser.Scene {
     this.matter.world.remove(ball.body);
     this.bodyToBall.delete(ball.body.id);
     this.balls.delete(ball.id);
+    ball.hitCircle.destroy();
     ball.display.destroy();
   }
 
