@@ -39,6 +39,8 @@ interface BallEntity {
   hitCircle: Phaser.GameObjects.Arc;
 }
 
+const HIT_CIRCLE_COLOR = 0xd4886a; // Lv5 연어색 — 임시 단일 색상
+
 function spriteKey(level: number): string {
   return `item-lv${String(level).padStart(2, "0")}`;
 }
@@ -347,7 +349,7 @@ export class PatisserieDropScene extends Phaser.Scene {
   }
 
   private addBall(level: number, x: number, y: number): BallEntity {
-    const { radius, hitColor } = getLevelDefinition(level);
+    const { radius } = getLevelDefinition(level);
     const id = ++this.ballIdCounter;
 
     const body = this.matter.add.circle(x, y, radius, {
@@ -360,8 +362,8 @@ export class PatisserieDropScene extends Phaser.Scene {
 
     const hitCircle = this.add
       .arc(x, y, radius)
-      .setFillStyle(hitColor, 0.18)
-      .setStrokeStyle(1.5, hitColor, 0.45)
+      .setFillStyle(HIT_CIRCLE_COLOR, 0.18)
+      .setStrokeStyle(1.5, HIT_CIRCLE_COLOR, 0.45)
       .setDepth(4);
 
     const displaySize = radius * 2 * SPRITE_DISPLAY_SCALE;
