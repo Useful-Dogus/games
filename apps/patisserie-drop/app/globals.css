@@ -20,9 +20,13 @@ body {
 }
 
 .page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: start center;
+  /* height (not min-height) caps layout to the visible viewport */
+  height: 100vh; /* fallback for browsers without dvh support */
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
   padding-top: max(8px, env(safe-area-inset-top));
   padding-right: max(10px, env(safe-area-inset-right));
   padding-bottom: max(10px, env(safe-area-inset-bottom));
@@ -31,8 +35,14 @@ body {
 
 .game-shell {
   width: min(520px, 100%);
+  /* Fill remaining height so the canvas can size from it */
+  flex: 1;
+  min-height: 0;
   display: grid;
+  /* title / hud / canvas — canvas row gets all remaining space */
+  grid-template-rows: auto auto 1fr;
   gap: 8px;
+  overflow: hidden;
 }
 
 .game-title {
@@ -85,10 +95,16 @@ body {
 
 .game-viewport {
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
+  /* Height-driven sizing: height fills 1fr row, width derives from aspect-ratio.
+     This prevents the element from overflowing on short viewports (iOS/in-app browsers).
+     Previously width-driven (width: 100% → height via aspect-ratio) caused the canvas
+     to overflow on iPhone SE and narrowed in-app WebViews. */
+  height: 100%;
+  width: auto;
   aspect-ratio: 480 / 854;
+  max-width: 100%;
+  min-height: 0;
+  margin: 0 auto;
   border-radius: 8px;
   overflow: hidden;
   background: #f2e7d9;
