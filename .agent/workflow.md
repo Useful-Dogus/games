@@ -13,15 +13,21 @@ Feedback loops:
 - Reviewer → Developer: defect / gap feedback
 - Developer → Architect: re-design request on spec collision or discovered assumption
 
-## Execution Sequence
+## Standard Collaboration Lifecycle
 
-Follow this sequence for every task:
+This is the required sequence for every task in this repository.
 
-1. Create a feature branch (`issues/<type>-<topic>`), then write spec and get user approval.
-2. After spec approval, write plan and get user approval.
-3. After plan approval, implement and verify on the feature branch.
-4. Run self-review and fix loop until quality criteria are met.
-5. Open a PR and report to the user.
+1. **Issue (Claude)**: Claude creates a GitHub Issue using `.github/ISSUE_TEMPLATE.md`.
+2. **Review (User)**: User reviews and approves the issue. Work does not begin until the issue is approved.
+3. **Develop (Claude)**:
+   - Create the feature branch (`issues/<type>-<topic>`).
+   - Write code → self-review → test → debug. Repeat until quality criteria are met.
+   - Commit in small, independently verifiable units (see `skills/git-workflow.md`).
+4. **PR (Claude)**: When quality is sufficient, Claude opens a PR using `.github/pull_request_template.md`.
+5. **Review (User)**: User reviews and merges the PR.
+
+> User approval is the gate between steps 2→3 and 4→5.
+> Do not proceed past a gate without explicit user approval in the current session.
 
 ---
 
