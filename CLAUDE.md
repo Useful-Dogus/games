@@ -6,6 +6,7 @@
 @.agent/project/architecture.md
 @.agent/project/games-registry.md
 @.agent/project/constraints.md
+@.agent/skills/git-workflow.md
 
 ## Role & Skill Reference
 
@@ -22,3 +23,4 @@ Adopt a role or invoke a skill by reading the relevant file before acting:
 - Never run destructive git commands (`reset --hard`, `push --force`, `clean -f`, etc.) without explicit approval.
 - Always present commit messages in a fenced code block.
 - When scope or approach is unclear, ask — do not infer.
+- Never add `Co-Authored-By: Claude` or any AI attribution to commit messages or PRs. All authorship belongs to the submitting engineer.
