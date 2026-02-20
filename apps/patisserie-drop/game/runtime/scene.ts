@@ -12,6 +12,7 @@ import {
   GAME_WIDTH,
   OVERFLOW_GAMEOVER_ACTIVATE_MS,
   OVERFLOW_LINE_Y,
+  OVERFLOW_VELOCITY_IGNORE_THRESHOLD,
   MERGE_IMPULSE_X_MAX,
   MERGE_IMPULSE_X_MIN,
   MERGE_IMPULSE_Y,
@@ -470,7 +471,17 @@ export class PatisserieDropScene extends Phaser.Scene {
         return false;
       }
 
-      return ball.body.position.y - ball.radius < OVERFLOW_LINE_Y;
+      if (ball.body.position.y - ball.radius >= OVERFLOW_LINE_Y) {
+        return false;
+      }
+
+      // Ignore balls moving upward (e.g. bouncing after merge) — they will
+      // naturally fall back down and should not trigger the game-over timer.
+      if (ball.body.velocity.y < OVERFLOW_VELOCITY_IGNORE_THRESHOLD) {
+        return false;
+      }
+
+      return true;
     });
   }
 
