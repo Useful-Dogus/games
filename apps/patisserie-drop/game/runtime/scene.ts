@@ -60,7 +60,6 @@ export class PatisserieDropScene extends Phaser.Scene {
   private mergeQueue: Array<[number, number]> = [];
 
   private previewImage?: Phaser.GameObjects.Image;
-  private previewLevelLabel?: Phaser.GameObjects.Text;
   private previewGuide?: Phaser.GameObjects.Graphics;
 
   constructor(eventsBridge: RuntimeEvents) {
@@ -279,39 +278,26 @@ export class PatisserieDropScene extends Phaser.Scene {
         .setDepth(8);
     }
 
-    if (!this.previewLevelLabel) {
-      this.previewLevelLabel = this.add
-        .text(this.currentDropX, CONTAINER_TOP - 4, `${this.nextDropLevels[0]}`, {
-          color: "#3f2b1e",
-          fontSize: "26px",
-          fontStyle: "700"
-        })
-        .setOrigin(0.5)
-        .setDepth(9);
-    }
-
     if (!this.previewGuide) {
       this.previewGuide = this.add.graphics().setDepth(5);
     }
   }
 
   private updatePreviewPosition(): void {
-    if (!this.previewImage || !this.previewLevelLabel) {
+    if (!this.previewImage) {
       return;
     }
 
     this.previewImage.setX(this.currentDropX);
-    this.previewLevelLabel.setX(this.currentDropX);
   }
 
   private updatePreviewVisuals(): void {
-    if (!this.previewImage || !this.previewLevelLabel || !this.previewGuide) {
+    if (!this.previewImage || !this.previewGuide) {
       return;
     }
 
     if (!this.canDrop || this.isGameOver) {
       this.previewImage.setVisible(false);
-      this.previewLevelLabel.setVisible(false);
       this.previewGuide.clear();
       return;
     }
@@ -319,23 +305,13 @@ export class PatisserieDropScene extends Phaser.Scene {
     const previewLevel = this.nextDropLevels[0];
     const previewRadius = this.getPreviewRadius(previewLevel);
     const previewY = CONTAINER_TOP - previewRadius - 4;
-    const fontSize = Phaser.Math.Clamp(previewRadius * 0.75, 14, 42);
 
     this.previewImage.setVisible(true);
-    this.previewLevelLabel.setVisible(true);
 
     this.previewImage
       .setTexture(spriteKey(previewLevel))
       .setDisplaySize(previewRadius * 2 * SPRITE_DISPLAY_SCALE, previewRadius * 2 * SPRITE_DISPLAY_SCALE)
       .setPosition(this.currentDropX, previewY);
-
-    this.previewLevelLabel.setPosition(this.currentDropX, previewY);
-    this.previewLevelLabel.setText(`${previewLevel}`);
-    this.previewLevelLabel.setStyle({
-      color: "#3f2b1e",
-      fontSize: `${fontSize}px`,
-      fontStyle: "700"
-    });
 
     this.previewGuide.clear();
     this.previewGuide.lineStyle(1, 0x8b5e3c, this.isDragging ? 0.5 : 0.22);
