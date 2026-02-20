@@ -28,3 +28,9 @@ export const PHYSICS_DENSITY_FACTOR = 0.0024;
 export const MERGE_IMPULSE_X_MIN = -0.7;
 export const MERGE_IMPULSE_X_MAX = 0.7;
 export const MERGE_IMPULSE_Y = -1.05;
+
+// Sprite content fills ~75% of its canvas (transparent border + drop shadow account for the rest).
+// Scale display size up so the visible bread edge aligns with the physics circle boundary.
+// Formula: content_fill_ratio × SPRITE_DISPLAY_SCALE ≈ 1.0
+// e.g. 0.75 × 1.33 ≈ 1.0 → bread edge meets physics circle when items touch.
+export const SPRITE_DISPLAY_SCALE = 1.33;
