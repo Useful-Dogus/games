@@ -43,6 +43,24 @@ Checkpoint policy:
 
 Output rule: present every commit message suggestion inside a Markdown fenced code block for copy-paste.
 
+AI authorship policy:
+
+- AI tools (Claude, Copilot, ChatGPT, etc.) are development tools, not contributors.
+- Never add `Co-Authored-By` or any AI tool to commit messages or PR author fields.
+- All code ownership and review responsibility remain with the submitting engineer.
+- AI assistance may be optionally noted in the PR description for transparency, but this does not change authorship.
+
+---
+
+## Issue Policy
+
+- **Every branch must be linked to a GitHub Issue.** No issue = no branch.
+- The following also require an issue without exception: refactoring, config changes, docs updates, dependency upgrades, bug fixes.
+- Large work should be broken down:
+  - One parent issue (goal definition)
+  - Multiple child issues (execution units)
+  - PRs are opened per child issue where possible.
+
 ---
 
 ## Branch Strategy
@@ -50,35 +68,43 @@ Output rule: present every commit message suggestion inside a Markdown fenced co
 ### Default
 
 - Work exclusively on feature branches.
-- Branch naming: `issues/<type>-<topic>`
-  - `issues/docs-initial-setup`
-  - `issues/feat-hub-game-list`
-  - `issues/fix-rewrite-config`
+- Branch naming: `issues/<number>-<type>-<description>`
+  - `issues/123-feat-add-snippet-list`
+  - `issues/58-fix-login-bug`
+  - `issues/202-refactor-auth-guard`
+- Issue number is mandatory in the branch name.
 - Use the `issues/` prefix for all branches — agent-generated and human-authored alike.
+- Always branch from the latest `main`.
 
 Procedure:
 
-1. Confirm `main` is up to date.
-2. Create / switch to the feature branch.
-3. Implement and verify.
-4. Commit on the feature branch using task-aligned checkpoint commits for recovery points.
-5. Merge to `main` via PR.
+1. Create a GitHub Issue.
+2. Confirm `main` is up to date.
+3. Create the feature branch from `main`.
+4. Implement and verify.
+5. Commit on the feature branch using task-aligned checkpoint commits for recovery points.
+6. Open a PR and merge to `main` after review.
+7. Delete the branch after merge.
 
-### Exception: Hotfix
+### Hotfix
 
-Applies when: production is broken and a branch/PR cycle cannot wait.
+Urgent fixes follow the **same procedure** as regular work.
 
-Required before any `main` commit:
+1. Create a GitHub Issue.
+2. Create an `issues/*` branch.
+3. Open a PR.
+4. Merge after review and CI pass.
+5. Deploy immediately if needed.
 
-- Explicit user approval in the current session.
-- Intake Note stating the reason direct-to-main was necessary.
+No separate hotfix branch. No direct-to-main commits under any circumstances.
 
 ---
 
 ## Main Branch Protection
 
 - Commit and push exclusively on feature branches.
-- Any git state-changing command on `main` (`add`, `commit`, `push`, `pull`, `merge`, `rebase`, `checkout`) requires explicit user approval before execution.
+- Direct push to `main` is never allowed — not even for hotfixes.
+- Any git state-changing command on `main` (`add`, `commit`, `push`, `pull`, `merge`, `rebase`) requires explicit user approval before execution.
 - Pre-commit then report is allowed on feature branches for development speed.
 
 ---
@@ -89,6 +115,38 @@ Required before any `main` commit:
   - `.github/ISSUE_TEMPLATE.md`
   - `.github/pull_request_template.md`
 - When the user requests a copy-pasteable issue body, provide it in a fenced code block.
+
+### PR Title
+
+Squash Merge makes the PR title the final commit message on `main`.
+Therefore, PR titles must follow the same commit convention.
+
+Format: `<emoji> [scope:] <subject>` · max 70 chars (issue number omitted — GitHub appends `(#PR)` automatically on squash)
+
+Examples:
+- `✨ feat(hub): game list filter by genre`
+- `🐛 fix(patisserie-drop): 게임오버 오탐 수정`
+- `🔧 chore: agent docs & git workflow 강화`
+
+### PR–Issue Linking
+
+Use in the PR body to connect the PR to its issue:
+
+| Situation | Keyword |
+|---|---|
+| PR fully resolves the issue | `Closes #123` or `Fixes #123` |
+| PR partially resolves the issue | `Part of #123` or `Related to #123` |
+
+Do not use `Closes` on a partial-resolution PR.
+
+### Merge Strategy
+
+Default: **Squash Merge**
+
+- One PR produces one final commit on `main`.
+- The squash commit message must clearly state the purpose of the change.
+- CI must pass before merging.
+- Resolve conflicts against the latest `main` before merging.
 
 ### Issue Quality Checklist
 
@@ -101,3 +159,13 @@ A well-formed issue satisfies all of the following:
 5. Reveals a state-transition flow: start → verify → fix failure → re-verify → done/merge.
 6. Makes Acceptance Criteria measurable; failure behavior is stated as an API/UI contract.
 7. Separates open questions (undecided items) from DoD / required checks.
+
+---
+
+## Prohibitions
+
+- Direct push to `main`
+- Branch without a linked Issue
+- Merging with a failing CI
+- Mixing unrelated changes in a single PR
+- Long-lived branches (split large work into smaller issues instead)
