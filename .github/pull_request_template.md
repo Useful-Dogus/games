@@ -44,7 +44,7 @@
 - Follow-up issues:
 
 ## Review Checklist
-- [ ] Branch name follows `issues/<type>-<topic>`
+- [ ] Branch name follows `issues/<number>-<type>-<description>`
 - [ ] Scope matches related issue and approved artifacts
 - [ ] `.agent` and `docs` updates are included when required
 - [ ] No unrelated changes included

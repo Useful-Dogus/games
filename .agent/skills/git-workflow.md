@@ -118,9 +118,15 @@ No separate hotfix branch. No direct-to-main commits under any circumstances.
 
 ### PR Title
 
-Format: `#<issue-number> <short description>`
+Squash Merge makes the PR title the final commit message on `main`.
+Therefore, PR titles must follow the same commit convention.
 
-Example: `#123 Add snippet list view`
+Format: `<emoji> [scope:] <subject>` · max 70 chars (issue number omitted — GitHub appends `(#PR)` automatically on squash)
+
+Examples:
+- `✨ feat(hub): game list filter by genre`
+- `🐛 fix(patisserie-drop): 게임오버 오탐 수정`
+- `🔧 chore: agent docs & git workflow 강화`
 
 ### PR–Issue Linking
 
