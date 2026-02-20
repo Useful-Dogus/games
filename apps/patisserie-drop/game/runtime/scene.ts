@@ -36,7 +36,10 @@ interface BallEntity {
   radius: number;
   body: MatterJS.BodyType;
   display: Phaser.GameObjects.Image;
+  hitCircle: Phaser.GameObjects.Arc;
 }
+
+const HIT_CIRCLE_COLOR = 0xd4886a; // Lv5 연어색 — 임시 단일 색상
 
 function spriteKey(level: number): string {
   return `item-lv${String(level).padStart(2, "0")}`;
@@ -259,6 +262,7 @@ export class PatisserieDropScene extends Phaser.Scene {
   private clearRoundObjects(): void {
     this.balls.forEach((ball) => {
       this.matter.world.remove(ball.body);
+      ball.hitCircle.destroy();
       ball.display.destroy();
     });
 
@@ -356,6 +360,12 @@ export class PatisserieDropScene extends Phaser.Scene {
       density: level * PHYSICS_DENSITY_FACTOR
     });
 
+    const hitCircle = this.add
+      .arc(x, y, radius)
+      .setFillStyle(HIT_CIRCLE_COLOR, 0.18)
+      .setStrokeStyle(1.5, HIT_CIRCLE_COLOR, 0.45)
+      .setDepth(4);
+
     const displaySize = radius * 2 * SPRITE_DISPLAY_SCALE;
     const display = this.add
       .image(x, y, spriteKey(level))
@@ -367,6 +377,7 @@ export class PatisserieDropScene extends Phaser.Scene {
       level,
       radius,
       body,
+      hitCircle,
       display
     };
 
@@ -378,7 +389,9 @@ export class PatisserieDropScene extends Phaser.Scene {
 
   private syncDisplayObjects(): void {
     this.balls.forEach((entity) => {
-      entity.display.setPosition(entity.body.position.x, entity.body.position.y);
+      const { x, y } = entity.body.position;
+      entity.hitCircle.setPosition(x, y);
+      entity.display.setPosition(x, y);
       entity.display.setRotation(entity.body.angle);
     });
   }
@@ -464,6 +477,7 @@ export class PatisserieDropScene extends Phaser.Scene {
     this.matter.world.remove(ball.body);
     this.bodyToBall.delete(ball.body.id);
     this.balls.delete(ball.id);
+    ball.hitCircle.destroy();
     ball.display.destroy();
   }
 
