@@ -71,6 +71,18 @@ body {
   font-size: 22px;
 }
 
+.hud-queue-sprites {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.hud-queue-sprites img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .game-viewport {
   position: relative;
   width: 100%;

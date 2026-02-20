@@ -21,7 +21,8 @@ import {
   PHYSICS_FRICTION_AIR,
   PHYSICS_FRICTION_STATIC,
   PHYSICS_GRAVITY_Y,
-  PHYSICS_RESTITUTION
+  PHYSICS_RESTITUTION,
+  SPRITE_DISPLAY_SCALE
 } from "../config";
 import { getLevelDefinition, MAX_LEVEL } from "../core/model/levels";
 import { pickNextDropLevel } from "../core/rules/drop-table";
@@ -34,14 +35,12 @@ interface BallEntity {
   level: number;
   radius: number;
   body: MatterJS.BodyType;
-  display: Phaser.GameObjects.Arc;
-  label: Phaser.GameObjects.Text;
+  display: Phaser.GameObjects.Image;
 }
 
-const LEVEL_COLORS = [
-  0x9ea4ad, 0xd4c7b7, 0xf1c676, 0xc09068, 0xa86f42, 0x946039, 0xd7b0a7, 0xefc17a, 0xf5e2ac, 0xe9cf8d,
-  0xd4a937
-];
+function spriteKey(level: number): string {
+  return `item-lv${String(level).padStart(2, "0")}`;
+}
 
 export class PatisserieDropScene extends Phaser.Scene {
   private eventsBridge: RuntimeEvents;
@@ -60,13 +59,19 @@ export class PatisserieDropScene extends Phaser.Scene {
   private bodyToBall = new Map<number, number>();
   private mergeQueue: Array<[number, number]> = [];
 
-  private previewCircle?: Phaser.GameObjects.Arc;
-  private previewLevelLabel?: Phaser.GameObjects.Text;
+  private previewImage?: Phaser.GameObjects.Image;
   private previewGuide?: Phaser.GameObjects.Graphics;
 
   constructor(eventsBridge: RuntimeEvents) {
     super("patisserie-drop-scene");
     this.eventsBridge = eventsBridge;
+  }
+
+  preload(): void {
+    for (let i = 1; i <= 11; i++) {
+      const key = spriteKey(i);
+      this.load.image(key, `/assets/sprites/${key}.png`);
+    }
   }
 
   create(): void {
@@ -114,7 +119,6 @@ export class PatisserieDropScene extends Phaser.Scene {
     graphics.strokeRect(CONTAINER_LEFT, CONTAINER_TOP, CONTAINER_WIDTH, CONTAINER_HEIGHT);
 
     this.add.rectangle(GAME_WIDTH / 2, OVERFLOW_LINE_Y, CONTAINER_WIDTH - 8, 2, 0xc75a4a, 0.9).setDepth(9);
-
   }
 
   private setupContainerBodies(): void {
@@ -256,7 +260,6 @@ export class PatisserieDropScene extends Phaser.Scene {
     this.balls.forEach((ball) => {
       this.matter.world.remove(ball.body);
       ball.display.destroy();
-      ball.label.destroy();
     });
 
     this.balls.clear();
@@ -265,19 +268,14 @@ export class PatisserieDropScene extends Phaser.Scene {
   }
 
   private ensurePreviewObjects(): void {
-    if (!this.previewCircle) {
-      this.previewCircle = this.add.circle(this.currentDropX, 94, 22, 0xdddddd, 1).setDepth(8);
-    }
-
-    if (!this.previewLevelLabel) {
-      this.previewLevelLabel = this.add
-        .text(this.currentDropX, 94, `${this.nextDropLevels[0]}`, {
-          color: "#3f2b1e",
-          fontSize: "26px",
-          fontStyle: "700"
-        })
-        .setOrigin(0.5)
-        .setDepth(9);
+    if (!this.previewImage) {
+      const level = this.nextDropLevels[0];
+      const { radius } = getLevelDefinition(level);
+      const displaySize = radius * 2 * SPRITE_DISPLAY_SCALE;
+      this.previewImage = this.add
+        .image(this.currentDropX, CONTAINER_TOP - radius - 4, spriteKey(level))
+        .setDisplaySize(displaySize, displaySize)
+        .setDepth(8);
     }
 
     if (!this.previewGuide) {
@@ -286,46 +284,34 @@ export class PatisserieDropScene extends Phaser.Scene {
   }
 
   private updatePreviewPosition(): void {
-    if (!this.previewCircle || !this.previewLevelLabel) {
+    if (!this.previewImage) {
       return;
     }
 
-    this.previewCircle.setX(this.currentDropX);
-    this.previewLevelLabel.setX(this.currentDropX);
+    this.previewImage.setX(this.currentDropX);
   }
 
   private updatePreviewVisuals(): void {
-    if (!this.previewCircle || !this.previewLevelLabel || !this.previewGuide) {
+    if (!this.previewImage || !this.previewGuide) {
       return;
     }
 
     if (!this.canDrop || this.isGameOver) {
-      this.previewCircle.setVisible(false);
-      this.previewLevelLabel.setVisible(false);
+      this.previewImage.setVisible(false);
       this.previewGuide.clear();
       return;
     }
 
     const previewLevel = this.nextDropLevels[0];
     const previewRadius = this.getPreviewRadius(previewLevel);
-    const color = LEVEL_COLORS[previewLevel - 1] ?? 0xffffff;
     const previewY = CONTAINER_TOP - previewRadius - 4;
-    const fontSize = Phaser.Math.Clamp(previewRadius * 0.75, 14, 42);
 
-    this.previewCircle.setVisible(true);
-    this.previewLevelLabel.setVisible(true);
-    this.previewCircle.setRadius(previewRadius);
-    this.previewCircle.setFillStyle(color, 1);
-    this.previewCircle.setStrokeStyle(2, 0xffffff, 0.6);
-    this.previewCircle.setPosition(this.currentDropX, previewY);
+    this.previewImage.setVisible(true);
 
-    this.previewLevelLabel.setPosition(this.currentDropX, previewY);
-    this.previewLevelLabel.setText(`${previewLevel}`);
-    this.previewLevelLabel.setStyle({
-      color: "#3f2b1e",
-      fontSize: `${fontSize}px`,
-      fontStyle: "700"
-    });
+    this.previewImage
+      .setTexture(spriteKey(previewLevel))
+      .setDisplaySize(previewRadius * 2 * SPRITE_DISPLAY_SCALE, previewRadius * 2 * SPRITE_DISPLAY_SCALE)
+      .setPosition(this.currentDropX, previewY);
 
     this.previewGuide.clear();
     this.previewGuide.lineStyle(1, 0x8b5e3c, this.isDragging ? 0.5 : 0.22);
@@ -370,24 +356,18 @@ export class PatisserieDropScene extends Phaser.Scene {
       density: level * PHYSICS_DENSITY_FACTOR
     });
 
-    const display = this.add.circle(x, y, radius, LEVEL_COLORS[level - 1] ?? 0xffffff, 1).setDepth(6);
-    display.setStrokeStyle(2, 0xffffff, 0.4);
-    const label = this.add
-      .text(x, y, `${level}`, {
-        color: "#3f2b1e",
-        fontSize: `${Phaser.Math.Clamp(radius * 0.78, 12, 46)}px`,
-        fontStyle: "700"
-      })
-      .setOrigin(0.5)
-      .setDepth(7);
+    const displaySize = radius * 2 * SPRITE_DISPLAY_SCALE;
+    const display = this.add
+      .image(x, y, spriteKey(level))
+      .setDisplaySize(displaySize, displaySize)
+      .setDepth(6);
 
     const entity: BallEntity = {
       id,
       level,
       radius,
       body,
-      display,
-      label
+      display
     };
 
     this.balls.set(id, entity);
@@ -400,8 +380,6 @@ export class PatisserieDropScene extends Phaser.Scene {
     this.balls.forEach((entity) => {
       entity.display.setPosition(entity.body.position.x, entity.body.position.y);
       entity.display.setRotation(entity.body.angle);
-      entity.label.setPosition(entity.body.position.x, entity.body.position.y);
-      entity.label.setRotation(0);
     });
   }
 
@@ -466,7 +444,6 @@ export class PatisserieDropScene extends Phaser.Scene {
 
   private hasOverflowObject(): boolean {
     return Array.from(this.balls.values()).some((ball) => {
-      // Ignore the currently dropping object until it lands.
       if (this.pendingLandingBallId !== null && ball.id === this.pendingLandingBallId) {
         return false;
       }
@@ -475,8 +452,6 @@ export class PatisserieDropScene extends Phaser.Scene {
         return false;
       }
 
-      // Ignore balls moving upward (e.g. bouncing after merge) — they will
-      // naturally fall back down and should not trigger the game-over timer.
       if (ball.body.velocity.y < OVERFLOW_VELOCITY_IGNORE_THRESHOLD) {
         return false;
       }
@@ -490,7 +465,6 @@ export class PatisserieDropScene extends Phaser.Scene {
     this.bodyToBall.delete(ball.body.id);
     this.balls.delete(ball.id);
     ball.display.destroy();
-    ball.label.destroy();
   }
 
   private publishHudState(): void {

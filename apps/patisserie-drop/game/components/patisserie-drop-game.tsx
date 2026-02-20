@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameController } from '../runtime/create-game';
 import type { GameOverState, HudState } from '../runtime/types';
 
+function spriteUrl(level: number): string {
+  return `/assets/sprites/item-lv${String(level).padStart(2, '0')}.png`;
+}
+
 const INITIAL_HUD: HudState = {
   score: 0,
   nextDropLevels: [1, 1],
@@ -66,11 +70,12 @@ export function PatisserieDropGame() {
           <span>Score</span>
           <strong>{hud.score.toLocaleString()}</strong>
         </div>
-        <div className="hud-item">
-          <span>Next 2</span>
-          <strong>
-            Lv{hud.nextDropLevels[0]} · Lv{hud.nextDropLevels[1]}
-          </strong>
+        <div className="hud-item hud-queue">
+          <span>Next</span>
+          <div className="hud-queue-sprites">
+            <img src={spriteUrl(hud.nextDropLevels[0])} alt={`Level ${hud.nextDropLevels[0]}`} width={32} height={32} />
+            <img src={spriteUrl(hud.nextDropLevels[1])} alt={`Level ${hud.nextDropLevels[1]}`} width={32} height={32} />
+          </div>
         </div>
       </header>
 
